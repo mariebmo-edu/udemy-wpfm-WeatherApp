@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -7,54 +8,95 @@ using System.Text;
 using System.Threading.Tasks;
 using WeatherApp.Annotations;
 using WeatherApp.Model;
+using WeatherApp.ViewModel.Commands;
+using WeatherApp.ViewModel.Helpers;
 
 namespace WeatherApp.ViewModel
 {
-    internal class WeatherViewModel : INotifyPropertyChanged
+
+    
+    public class WeatherViewModel : INotifyPropertyChanged
     {
 
-        public string query;
+        private City _selectedCity;
+        private string _query;
+        private CurrentConditions _currentConditions;
 
         public string Query
         {
-            get { return query;}
+            get => _query;
             set
             {
-                query = value;
-                OnPropertyChanged("Query");
+                _query = value;
+                OnPropertyChanged(nameof(Query));
             }
         }
 
-        private CurrentConditions currentConditions;
+        public ObservableCollection<City> Cities { get; set; }
 
         public CurrentConditions CurrentConditions
         {
-            get { return currentConditions; }
+            get => _currentConditions;
             set
             {
-                currentConditions = value;
-                OnPropertyChanged("CurrentConditions");
+                _currentConditions = value;
+                OnPropertyChanged(nameof(CurrentConditions));
             }
         }
-
-        private City selectedCity { get; set; }
 
         public City SelectedCity
         {
-            get { return selectedCity; }
+            get => _selectedCity;
             set
             {
-                selectedCity = value;
-                OnPropertyChanged("SelectedCity");
+                _selectedCity = value;
+                OnPropertyChanged(nameof(SelectedCity));
+                GetCurrentConditions();
             }
         }
 
+        public SearchCommand SearchCommand { get; set; }
+
         public WeatherViewModel()
         {
-            SelectedCity = new City
+            if (DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
             {
-                LocalizedName = "Oslo"
-            };
+                SelectedCity = new City
+                {
+                    LocalizedName = "Oslo"
+                };
+                CurrentConditions = new CurrentConditions
+                {
+                    WeatherText = "Cloudy",
+                    Temperature = new Temperature
+                    {
+                        Metric = new Units
+                        {
+                            Value = 13
+                        }
+                    },
+                    HasPrecipitation = true
+                };
+            }
+
+            SearchCommand = new SearchCommand(this);
+            Cities = new ObservableCollection<City>();
+        }
+
+        public async void GetCurrentConditions()
+        {
+            CurrentConditions = await AccuWeatherHelper.GetCurrentConditions(SelectedCity.Key);
+        }
+
+        public async void MakeQuery()
+        {
+            var cities = await AccuWeatherHelper.GetCities(Query);
+
+            Cities.Clear();
+            foreach (var city in cities)
+            {
+                Cities.Add(city);
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

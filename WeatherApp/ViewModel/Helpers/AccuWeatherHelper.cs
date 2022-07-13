@@ -22,34 +22,30 @@ namespace WeatherApp.ViewModel.Helpers
 
         public static async Task<List<City>> GetCities(string query)
         {
-            List<City> cities = new List<City>();
+            var cities = new List<City>();
 
-            string url = BASE_URL + string.Format(AUTOCOMPLETE_ENDPOINT, API_KEY, query);
+            var url = BASE_URL + string.Format(AUTOCOMPLETE_ENDPOINT, API_KEY, query);
 
-            using (HttpClient client = new HttpClient())
-            {
-                var response = client.GetAsync(url).Result;
-                string json = await response.Content.ReadAsStringAsync();
+            using var client = new HttpClient();
+            var response = client.GetAsync(url).Result;
+            var json = await response.Content.ReadAsStringAsync();
 
-                cities = JsonConvert.DeserializeObject<List<City>>(json);
-            }
+            cities = JsonConvert.DeserializeObject<List<City>>(json);
 
             return cities;
         }
 
         public static async Task<CurrentConditions> GetCurrentConditions(string cityKey)
         {
-            CurrentConditions currentConditions = new CurrentConditions();
+            var currentConditions = new CurrentConditions();
 
-            string url = BASE_URL + string.Format(CURRECT_CONDITIONS_ENDPOINT, cityKey, API_KEY);
+            var url = BASE_URL + string.Format(CURRECT_CONDITIONS_ENDPOINT, cityKey, API_KEY);
 
-            using (HttpClient client = new HttpClient())
-            {
-                var response = client.GetAsync(url).Result;
-                string json = await response.Content.ReadAsStringAsync();
+            using var client = new HttpClient();
+            var response = client.GetAsync(url).Result;
+            var json = await response.Content.ReadAsStringAsync();
 
-                currentConditions = JsonConvert.DeserializeObject<List<CurrentConditions>>(json).FirstOrDefault();
-            }
+            currentConditions = JsonConvert.DeserializeObject<List<CurrentConditions>>(json)!.FirstOrDefault();
 
             return currentConditions;
         }
